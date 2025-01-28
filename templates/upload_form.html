@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload {{ file_type.capitalize() }}</title>
+</head>
+<body>
+    <h1>Upload a {{ file_type.capitalize() }}</h1>
+    <form action="" method="POST" enctype="multipart/form-data">
+        <label for="file">Upload {{ file_type.capitalize() }}:</label>
+        <input type="file" name="file" accept="{{ 'video/*' if file_type == 'video' else 'image/*' }}" required><br><br>
+
+        <label for="caption">Caption:</label><br>
+        <textarea name="caption" rows="5" cols="40" required></textarea><br><br>
+
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>

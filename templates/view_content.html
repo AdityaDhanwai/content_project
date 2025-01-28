@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploaded Content Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #9cc4eb;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+        .filters label {
+            font-size: 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            background: rgb(229, 228, 211);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(240, 222, 222, 0.1);
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Maintain Aspect Ratio Without Cropping */
+        .gallery-item img, .gallery-item video {
+            max-width: 100%;  /* Image never exceeds its container width */
+            height: auto;      /* Maintain aspect ratio */
+            max-height: 300px; /* Prevents very tall images */
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto; /* Centers the image */
+        }
+
+        .caption {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .delete-btn {
+            margin-top: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+
+        @media (max-width: 600px) {
+            .gallery-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .gallery-item video {
+            width: 90%;  /* Make video wider */
+            max-width: 250px;  /* Prevent it from being too large */
+            height: auto;  /* Maintain aspect ratio */
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto; /* Centers the video */
+        }
+    </style>
+
+
+    <script>
+        function confirmDelete(event) {
+            event.preventDefault(); // Prevent form submission
+            let confirmation = confirm("⚠ Are you sure you want to delete this content? This action cannot be undone!");
+            if (confirmation) {
+                event.target.closest("form").submit(); // If confirmed, submit the form
+            }
+        }
+
+        function filterContent() {
+            let showVideos = document.getElementById("showVideos").checked;
+            let showImages = document.getElementById("showImages").checked;
+
+            let galleryItems = document.querySelectorAll(".gallery-item");
+
+            galleryItems.forEach(item => {
+                let isVideo = item.querySelector("video") !== null;
+                let isImage = item.querySelector("img") !== null;
+
+                if ((showVideos && isVideo) || (showImages && isImage)) {
+                    item.style.display = "block"; // Show matching content
+                } else {
+                    item.style.display = "none"; // Hide content that doesn't match
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            filterContent(); // Apply filter on page load
+        });
+    </script>
+</head>
+<body>
+    <h1>Uploaded Content Gallery</h1>
+
+    <!-- Filters -->
+    <div class="filters">
+        <label><input type="checkbox" id="showVideos" checked onchange="filterContent()"> Show Videos</label>
+        <label><input type="checkbox" id="showImages" checked onchange="filterContent()"> Show Images</label>
+    </div>
+
+    <div class="gallery-container">
+        {% for content in contents %}
+        <div class="gallery-item">
+            {% if content.file_type == 'video' %}
+                <video controls>
+                    <source src="https://{{ bucket_name }}.s3.{{ region }}.amazonaws.com/{{ content.file_name }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% else %}
+                <img src="https://{{ bucket_name }}.s3.{{ region }}.amazonaws.com/{{ content.file_name }}" 
+                     alt="Image"
+                     onerror="this.style.display='none'; console.log('Image failed to load:', this.src);">
+            {% endif %}
+            <div class="caption">{{ content.caption }}</div>
+            <form action="{{ url_for('delete_content', content_id=content.id) }}" method="POST">
+                <button type="submit" class="delete-btn" onclick="confirmDelete(event)">Delete</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
